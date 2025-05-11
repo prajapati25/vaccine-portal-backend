@@ -24,6 +24,10 @@ public interface StudentRepository extends JpaRepository<Student, String> {
            "AND (:grade IS NULL OR s.grade = :grade)")
     Page<Student> searchStudents(String name, String grade, Pageable pageable);
     
-    @Query("SELECT COUNT(v) > 0 FROM VaccinationRecord v WHERE v.student.studentId = :studentId")
+    @Query("SELECT CASE WHEN COUNT(v) > 0 THEN true ELSE false END FROM VaccinationRecord v WHERE v.student.studentId = ?1")
     boolean hasVaccinationRecords(String studentId);
+
+    Page<Student> findByNameContaining(String name, Pageable pageable);
+    
+    Page<Student> findByNameContainingAndGrade(String name, String grade, Pageable pageable);
 } 

@@ -4,6 +4,8 @@ import com.school.vaccineportalbackend.dto.ImportResult;
 import com.school.vaccineportalbackend.model.Student;
 import com.school.vaccineportalbackend.repository.StudentRepository;
 import com.school.vaccineportalbackend.dto.StudentDTO;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,12 +27,16 @@ import java.util.stream.Collectors;
 
 @Service
 public class StudentService {
+    private static final Logger logger = LogManager.getLogger(StudentService.class);
+
     @Autowired
     private StudentRepository studentRepository;
 
     @Transactional(readOnly = true)
     public Page<StudentDTO> getAllStudents(Pageable pageable) {
+        logger.info("Getting all students with pagination");
         Page<Student> students = studentRepository.findAll(pageable);
+        logger.debug("Found {} students", students.getTotalElements());
         return students.map(student -> {
             StudentDTO dto = StudentDTO.fromEntity(student);
             dto.setHasVaccinationRecords(studentRepository.hasVaccinationRecords(student.getStudentId()));
@@ -40,17 +46,21 @@ public class StudentService {
 
     @Transactional(readOnly = true)
     public Optional<StudentDTO> getStudentById(String studentId) {
+        logger.info("Getting student by ID: {}", studentId);
         return studentRepository.findById(studentId)
                 .map(student -> {
                     StudentDTO dto = StudentDTO.fromEntity(student);
                     dto.setHasVaccinationRecords(studentRepository.hasVaccinationRecords(studentId));
+                    logger.debug("Found student: {}", student.getName());
                     return dto;
                 });
     }
 
     @Transactional(readOnly = true)
     public Page<StudentDTO> getStudentsByGrade(String grade, Pageable pageable) {
+        logger.info("Getting students by grade: {}", grade);
         Page<Student> students = studentRepository.findByGrade(grade, pageable);
+        logger.debug("Found {} students in grade: {}", students.getTotalElements(), grade);
         return students.map(student -> {
             StudentDTO dto = StudentDTO.fromEntity(student);
             dto.setHasVaccinationRecords(studentRepository.hasVaccinationRecords(student.getStudentId()));
@@ -60,7 +70,20 @@ public class StudentService {
 
     @Transactional(readOnly = true)
     public Page<StudentDTO> searchStudents(String name, String grade, Pageable pageable) {
-        Page<Student> students = studentRepository.searchStudents(name, grade, pageable);
+        logger.info("Searching students with name: {} and grade: {}", name, grade);
+        Page<Student> students;
+        
+        if (name != null && grade != null) {
+            students = studentRepository.findByNameContainingAndGrade(name, grade, pageable);
+        } else if (name != null) {
+            students = studentRepository.findByNameContaining(name, pageable);
+        } else if (grade != null) {
+            students = studentRepository.findByGrade(grade, pageable);
+        } else {
+            students = studentRepository.findAll(pageable);
+        }
+        
+        logger.debug("Found {} students matching search criteria", students.getTotalElements());
         return students.map(student -> {
             StudentDTO dto = StudentDTO.fromEntity(student);
             dto.setHasVaccinationRecords(studentRepository.hasVaccinationRecords(student.getStudentId()));
@@ -94,11 +117,15 @@ public class StudentService {
 
     @Transactional
     public StudentDTO createStudent(Student student) {
+        logger.info("Creating new student: {}", student.getName());
+        
         // Generate a new roll number
         String rollNumber = generateRollNumber();
         student.setStudentId(rollNumber);
         
         Student savedStudent = studentRepository.save(student);
+        logger.debug("Created student with ID: {}", savedStudent.getStudentId());
+        
         StudentDTO dto = StudentDTO.fromEntity(savedStudent);
         dto.setHasVaccinationRecords(false); // New student won't have records yet
         return dto;
@@ -106,8 +133,13 @@ public class StudentService {
 
     @Transactional
     public StudentDTO updateStudent(String studentId, Student student) {
+        logger.info("Updating student with ID: {}", studentId);
+        
         Student existingStudent = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+            .orElseThrow(() -> {
+                logger.error("Student not found with ID: {}", studentId);
+                return new RuntimeException("Student not found");
+            });
         
         // Preserve the created_at field
         student.setCreatedAt(existingStudent.getCreatedAt());
@@ -117,6 +149,7 @@ public class StudentService {
         
         // Save the updated student
         Student savedStudent = studentRepository.save(student);
+        logger.debug("Updated student: {}", savedStudent.getName());
         
         // Create and return the DTO
         StudentDTO dto = StudentDTO.fromEntity(savedStudent);
@@ -126,14 +159,24 @@ public class StudentService {
 
     @Transactional
     public void deleteStudent(String studentId) {
+        logger.info("Deleting student with ID: {}", studentId);
+        
+        if (!studentRepository.existsById(studentId)) {
+            logger.error("Student not found with ID: {}", studentId);
+            throw new RuntimeException("Student not found");
+        }
+        
         Student student = studentRepository.findById(studentId)
             .orElseThrow(() -> new RuntimeException("Student not found"));
         student.setActive(false);
         studentRepository.save(student);
+        logger.debug("Successfully deleted student with ID: {}", studentId);
     }
 
     @Transactional
     public ImportResult importStudentsFromCSV(MultipartFile file) {
+        logger.info("Importing students from CSV file: {}", file.getOriginalFilename());
+        
         ImportResult result = new ImportResult();
         result.setTotal(0);
         result.setImported(0);
@@ -208,7 +251,9 @@ public class StudentService {
                 }
             }
             
+            logger.debug("Successfully imported {} students", result.getImported());
         } catch (Exception e) {
+            logger.error("Error importing students from CSV", e);
             result.getErrors().add("Failed to process file: " + e.getMessage());
         }
         
@@ -217,28 +262,36 @@ public class StudentService {
 
     @Transactional(readOnly = true)
     public byte[] exportStudentsToCSV() {
-        List<Student> students = studentRepository.findAll();
+        logger.info("Exporting students to CSV");
         
-        StringBuilder csv = new StringBuilder();
-        // Add headers
-        csv.append("Student ID,Name,Grade,Date of Birth,Gender,Parent Name,Parent Email,Contact Number,Address\n");
-        
-        // Add data rows
-        for (Student student : students) {
-            csv.append(String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
-                escapeCsvField(student.getStudentId()),
-                escapeCsvField(student.getName()),
-                escapeCsvField(student.getGrade()),
-                student.getDateOfBirth(),
-                escapeCsvField(student.getGender()),
-                escapeCsvField(student.getParentName()),
-                escapeCsvField(student.getParentEmail()),
-                escapeCsvField(student.getContactNumber()),
-                escapeCsvField(student.getAddress())
-            ));
+        try {
+            List<Student> students = studentRepository.findAll();
+            
+            StringBuilder csv = new StringBuilder();
+            // Add headers
+            csv.append("Student ID,Name,Grade,Date of Birth,Gender,Parent Name,Parent Email,Contact Number,Address\n");
+            
+            // Add data rows
+            for (Student student : students) {
+                csv.append(String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+                    escapeCsvField(student.getStudentId()),
+                    escapeCsvField(student.getName()),
+                    escapeCsvField(student.getGrade()),
+                    student.getDateOfBirth(),
+                    escapeCsvField(student.getGender()),
+                    escapeCsvField(student.getParentName()),
+                    escapeCsvField(student.getParentEmail()),
+                    escapeCsvField(student.getContactNumber()),
+                    escapeCsvField(student.getAddress())
+                ));
+            }
+            
+            logger.debug("Successfully exported {} students to CSV", studentRepository.count());
+            return csv.toString().getBytes();
+        } catch (Exception e) {
+            logger.error("Error exporting students to CSV", e);
+            throw new RuntimeException("Error exporting students to CSV", e);
         }
-        
-        return csv.toString().getBytes();
     }
     
     private String escapeCsvField(String field) {

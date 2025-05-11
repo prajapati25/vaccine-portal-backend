@@ -8,6 +8,8 @@ import com.school.vaccineportalbackend.model.Vaccine;
 import com.school.vaccineportalbackend.repository.VaccinationDriveRepository;
 import com.school.vaccineportalbackend.repository.VaccineRepository;
 import com.school.vaccineportalbackend.repository.VaccinationRecordRepository;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -28,6 +30,7 @@ import java.util.Collections;
 
 @Service
 public class VaccinationDriveService {
+    private static final Logger logger = LogManager.getLogger(VaccinationDriveService.class);
     private final VaccinationDriveRepository vaccinationDriveRepository;
     private final VaccinationRecordRepository vaccinationRecordRepository;
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
@@ -42,31 +45,43 @@ public class VaccinationDriveService {
 
     @Transactional(readOnly = true)
     public Page<VaccinationDriveDTO> getAllDrives(Pageable pageable) {
-        return vaccinationDriveRepository.findAll(pageable)
-                .map(this::convertToDTO);
+        logger.info("Getting all vaccination drives with pagination");
+        Page<VaccinationDrive> drives = vaccinationDriveRepository.findAll(pageable);
+        logger.debug("Found {} vaccination drives", drives.getTotalElements());
+        return drives.map(this::convertToDTO);
     }
 
     @Transactional(readOnly = true)
     public VaccinationDriveDTO getDriveById(Long id) {
-        return vaccinationDriveRepository.findById(id)
-                .map(this::convertToDTO)
-                .orElseThrow(() -> new RuntimeException("Vaccination drive not found with id: " + id));
+        logger.info("Getting vaccination drive by ID: {}", id);
+        VaccinationDrive drive = vaccinationDriveRepository.findById(id)
+            .orElseThrow(() -> {
+                logger.error("Vaccination drive not found with ID: {}", id);
+                return new RuntimeException("Vaccination drive not found with id: " + id);
+            });
+        logger.debug("Found vaccination drive for vaccine: {}", drive.getVaccine().getName());
+        return convertToDTO(drive);
     }
 
     @Transactional(readOnly = true)
     public Page<VaccinationDriveDTO> getUpcomingDrives(LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        return vaccinationDriveRepository.findByDriveDateBetweenAndIsActiveTrue(startDate, endDate, pageable)
-                .map(this::convertToDTO);
+        logger.info("Getting upcoming vaccination drives between dates: {} and {}", startDate, endDate);
+        Page<VaccinationDrive> drives = vaccinationDriveRepository.findByDriveDateBetween(startDate, endDate, pageable);
+        logger.debug("Found {} upcoming vaccination drives", drives.getTotalElements());
+        return drives.map(this::convertToDTO);
     }
 
     @Transactional(readOnly = true)
     public Page<VaccinationDriveDTO> getDrivesByGrade(String grade, Pageable pageable) {
-        return vaccinationDriveRepository.findByApplicableGradesContainingAndIsActiveTrue(grade, pageable)
-                .map(this::convertToDTO);
+        logger.info("Getting vaccination drives for grade: {}", grade);
+        Page<VaccinationDrive> drives = vaccinationDriveRepository.findByApplicableGradesContaining(grade, pageable);
+        logger.debug("Found {} vaccination drives for grade: {}", drives.getTotalElements(), grade);
+        return drives.map(this::convertToDTO);
     }
 
     @Transactional(readOnly = true)
     public Page<VaccinationRecordDTO> getVaccinationRecordsForDrive(Long driveId, Pageable pageable) {
+        logger.info("Getting vaccination records for drive ID: {}", driveId);
         VaccinationDrive drive = vaccinationDriveRepository.findById(driveId)
                 .orElseThrow(() -> new RuntimeException("Vaccination drive not found with id: " + driveId));
         return vaccinationRecordRepository.findByVaccinationDrive(drive, pageable)
@@ -75,14 +90,25 @@ public class VaccinationDriveService {
 
     @Transactional
     public VaccinationDrive createDrive(VaccinationDrive drive) {
+        logger.info("Creating new vaccination drive for vaccine: {} on date: {}", 
+            drive.getVaccine().getName(), drive.getDriveDate());
+        
         validateDriveSchedule(drive);
-        return vaccinationDriveRepository.save(drive);
+        VaccinationDrive savedDrive = vaccinationDriveRepository.save(drive);
+        logger.debug("Created vaccination drive with ID: {}", savedDrive.getId());
+        
+        return savedDrive;
     }
 
     @Transactional
     public VaccinationDrive updateDrive(Long id, VaccinationDrive updatedDrive) {
+        logger.info("Updating vaccination drive with ID: {}", id);
+        
         VaccinationDrive existingDrive = vaccinationDriveRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Drive not found"));
+            .orElseThrow(() -> {
+                logger.error("Vaccination drive not found with ID: {}", id);
+                return new RuntimeException("Drive not found");
+            });
 
         // Check if drive is in the past
         if (existingDrive.getDriveDate().isBefore(LocalDate.now())) {
@@ -104,18 +130,30 @@ public class VaccinationDriveService {
         existingDrive.setStatus(updatedDrive.getStatus());
         existingDrive.setActive(updatedDrive.isActive());
         
-        return vaccinationDriveRepository.save(existingDrive);
+        VaccinationDrive updatedDriveEntity = vaccinationDriveRepository.save(existingDrive);
+        logger.debug("Updated vaccination drive for vaccine: {}", updatedDriveEntity.getVaccine().getName());
+        
+        return updatedDriveEntity;
     }
 
     @Transactional
     public void deleteDrive(Long id) {
+        logger.info("Deleting vaccination drive with ID: {}", id);
+        
+        if (!vaccinationDriveRepository.existsById(id)) {
+            logger.error("Vaccination drive not found with ID: {}", id);
+            throw new RuntimeException("Vaccination drive not found with id: " + id);
+        }
+        
         VaccinationDrive drive = vaccinationDriveRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vaccination drive not found with id: " + id));
         drive.setActive(false);
         vaccinationDriveRepository.save(drive);
+        logger.debug("Successfully deleted vaccination drive with ID: {}", id);
     }
 
     public VaccinationDriveDTO convertToDTO(VaccinationDrive drive) {
+        logger.debug("Converting vaccination drive to DTO - ID: {}", drive.getId());
         if (drive == null) {
             return null;
         }
@@ -139,6 +177,7 @@ public class VaccinationDriveService {
         dto.setStatus(drive.getStatus());
         dto.setActive(drive.isActive());
         dto.setNotes(drive.getNotes());
+        dto.setVaccineBatch(drive.getVaccineBatch());
         
         if (drive.getCreatedAt() != null) {
             dto.setCreatedAt(drive.getCreatedAt().format(DATE_TIME_FORMATTER));
@@ -155,7 +194,7 @@ public class VaccinationDriveService {
         dto.setId(record.getId());
         dto.setStudentId(record.getStudent().getStudentId());
         dto.setStudentName(record.getStudent().getName());
-        dto.setVaccinationDriveId(record.getVaccinationDrive().getId());
+        dto.setDriveId(record.getVaccinationDrive().getId());
         dto.setDoseNumber(record.getDoseNumber());
         dto.setVaccinationDate(record.getVaccinationDate().format(DATE_TIME_FORMATTER));
         dto.setBatchNumber(record.getBatchNumber());

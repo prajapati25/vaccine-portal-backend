@@ -1,12 +1,12 @@
--- Insert sample user with known working BCrypt hash
 INSERT INTO users (username, password, role, created_at) VALUES
 ('admin', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW', 'ADMIN', CURRENT_TIMESTAMP);
 
+
 -- Insert sample vaccines
-INSERT INTO vaccines (name, manufacturer, description, doses_required, days_between_doses, expiry_date, available_doses, price, created_at, updated_at) VALUES
-('COVID-19 Vaccine', 'Pfizer', 'mRNA vaccine for COVID-19', 2, 21, '2024-12-31', 1000, 0.00, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Hepatitis B', 'GSK', 'Recombinant vaccine for Hepatitis B', 3, 30, '2024-12-31', 500, 0.00, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('MMR', 'Merck', 'Measles, Mumps, and Rubella vaccine', 2, 28, '2024-12-31', 300, 0.00, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO vaccines (name, manufacturer, description, doses_required, days_between_doses, expiry_date, available_doses, price, active, created_at, updated_at) VALUES
+('COVID-19 Vaccine', 'Pfizer', 'mRNA vaccine for COVID-19', 2, 21, '2024-12-31', 1000, 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Hepatitis B', 'GSK', 'Recombinant vaccine for Hepatitis B', 3, 30, '2024-12-31', 500, 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('MMR', 'Merck', 'Measles, Mumps, and Rubella vaccine', 2, 28, '2024-12-31', 300, 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert sample vaccination drives
 INSERT INTO vaccination_drives (vaccine_id, vaccine_batch, drive_date, available_doses, applicable_grades, minimum_age, maximum_age, status, is_active, notes, created_at, updated_at)
@@ -120,6 +120,3 @@ SELECT
     CURRENT_TIMESTAMP
 FROM vaccination_drives vd
 WHERE vd.vaccine_batch = 'BATCH-002';
-
--- Drop the temporary function
-DROP FUNCTION IF EXISTS generate_bcrypt_hash(text);

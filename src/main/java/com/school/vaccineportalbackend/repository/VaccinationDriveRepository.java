@@ -43,4 +43,8 @@ public interface VaccinationDriveRepository extends JpaRepository<VaccinationDri
     
     @Query("SELECT COUNT(v) > 0 FROM VaccinationDrive v WHERE v.driveDate = :date AND v.applicableGrades IN :grades")
     boolean existsOverlappingDrive(@Param("date") LocalDate date, @Param("grades") List<String> grades);
+
+    Page<VaccinationDrive> findByDriveDateBetween(LocalDate startDate, LocalDate endDate, Pageable pageable);
+    
+    Page<VaccinationDrive> findByApplicableGradesContaining(String grade, Pageable pageable);
 } 

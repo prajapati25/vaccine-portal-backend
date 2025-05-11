@@ -13,17 +13,29 @@ public class Vaccine {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     @Column(nullable = false)
     private String manufacturer;
 
-    @Column(nullable = false)
+    @Column(length = 1000)
     private String description;
 
     @Column(nullable = false)
     private Integer dosesRequired;
+
+    @Column(name = "dose_interval_days")
+    private Integer doseInterval;
+
+    @Column(name = "minimum_age_years")
+    private Integer minimumAge;
+
+    @Column(name = "maximum_age_years")
+    private Integer maximumAge;
+
+    @Column(nullable = false)
+    private boolean active = true;
 
     @Column(nullable = false)
     private Integer daysBetweenDoses;
@@ -37,10 +49,10 @@ public class Vaccine {
     @Column(nullable = false)
     private Double price;
     
-    @Column(nullable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
     
-    @Column(nullable = false)
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
     @PrePersist

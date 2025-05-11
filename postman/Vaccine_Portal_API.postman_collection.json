@@ -1,0 +1,1054 @@
+{
+  "info": {
+    "name": "Vaccine Portal API",
+    "description": "API collection for the Vaccine Portal application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Students",
+      "item": [
+        {
+          "name": "Get All Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/students?page=0&size=10&sortBy=name&direction=ASC",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "name"
+                },
+                {
+                  "key": "direction",
+                  "value": "ASC"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Student by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/students/STU001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students", "STU001"]
+            }
+          }
+        },
+        {
+          "name": "Get Students by Grade",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/students/grade/5?page=0&size=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students", "grade", "5"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/students/search?name=John&grade=5&page=0&size=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students", "search"],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "John"
+                },
+                {
+                  "key": "grade",
+                  "value": "5"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/students",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"studentId\": \"STU001\",\n    \"name\": \"John Doe\",\n    \"grade\": \"5\",\n    \"dateOfBirth\": \"2010-01-01\",\n    \"gender\": \"MALE\",\n    \"address\": \"123 Main St\",\n    \"contactNumber\": \"1234567890\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Student",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/students/STU001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students", "STU001"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"John Doe Updated\",\n    \"grade\": \"6\",\n    \"dateOfBirth\": \"2010-01-01\",\n    \"gender\": \"MALE\",\n    \"address\": \"456 New St\",\n    \"contactNumber\": \"9876543210\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Student",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/students/STU001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students", "STU001"]
+            }
+          }
+        },
+        {
+          "name": "Import Students",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/students/import",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students", "import"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/students.csv"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/students/export",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students", "export"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vaccination Records",
+      "item": [
+        {
+          "name": "Get All Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-records?page=0&size=10&sortBy=id&direction=asc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-records"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "id"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Record by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-records/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-records", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Records by Student",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-records/student/STU001?page=0&size=10&sortBy=id&direction=asc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-records", "student", "STU001"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "id"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Records by Drive",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-records/drive/1?page=0&size=10&sortBy=id&direction=asc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-records", "drive", "1"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "id"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Records by Date Range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-records/date-range?startDate=2024-01-01T00:00:00&endDate=2024-12-31T23:59:59&page=0&size=10&sortBy=id&direction=asc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-records", "date-range"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01T00:00:00"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31T23:59:59"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "id"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-records",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-records"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"studentId\": \"STU001\",\n    \"driveId\": 1,\n    \"doseNumber\": 1,\n    \"vaccinationDate\": \"2024-01-01T10:00:00\",\n    \"batchNumber\": \"BATCH001\",\n    \"administeredBy\": \"Dr. Smith\",\n    \"vaccinationSite\": \"School Clinic\",\n    \"status\": \"COMPLETED\",\n    \"sideEffects\": \"None\",\n    \"nextDoseDate\": \"2024-02-01T10:00:00\",\n    \"notes\": \"First dose administered successfully\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Record",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-records/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-records", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"doseNumber\": 2,\n    \"vaccinationDate\": \"2024-02-01T11:00:00\",\n    \"batchNumber\": \"BATCH002\",\n    \"administeredBy\": \"Dr. Johnson\",\n    \"vaccinationSite\": \"School Clinic\",\n    \"status\": \"COMPLETED\",\n    \"sideEffects\": \"Mild fever\",\n    \"nextDoseDate\": \"2024-03-01T11:00:00\",\n    \"notes\": \"Second dose administered successfully\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Record",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-records/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-records", "1"]
+            }
+          }
+        },
+        {
+          "name": "Generate Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-records/report?vaccineName=COVID-19&status=COMPLETED&grade=5&startDate=2024-01-01&endDate=2024-12-31&page=0&size=10&sortBy=id&direction=asc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-records", "report"],
+              "query": [
+                {
+                  "key": "vaccineName",
+                  "value": "COVID-19"
+                },
+                {
+                  "key": "status",
+                  "value": "COMPLETED"
+                },
+                {
+                  "key": "grade",
+                  "value": "5"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "id"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-records/report/export?vaccineName=COVID-19&status=COMPLETED&grade=5&startDate=2024-01-01&endDate=2024-12-31&format=pdf",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-records", "report", "export"],
+              "query": [
+                {
+                  "key": "vaccineName",
+                  "value": "COVID-19"
+                },
+                {
+                  "key": "status",
+                  "value": "COMPLETED"
+                },
+                {
+                  "key": "grade",
+                  "value": "5"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "format",
+                  "value": "pdf"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vaccination Drives",
+      "item": [
+        {
+          "name": "Get All Drives",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-drives?page=0&size=10&sortBy=id&direction=asc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-drives"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "id"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Drive by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-drives/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-drives", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Upcoming Drives",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-drives/upcoming?startDate=2024-01-01&endDate=2024-12-31&page=0&size=10&sortBy=id&direction=asc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-drives", "upcoming"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "id"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Drives by Grade",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-drives/grade/5?page=0&size=10&sortBy=id&direction=asc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-drives", "grade", "5"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "id"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Records for Drive",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-drives/1/records?page=0&size=10&sortBy=id&direction=asc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-drives", "1", "records"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "id"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Drive",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-drives",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-drives"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"vaccine\": {\n        \"id\": 1\n    },\n    \"vaccineBatch\": \"BATCH001\",\n    \"driveDate\": \"2024-01-01\",\n    \"availableDoses\": 100,\n    \"applicableGrades\": \"5,6\",\n    \"minimumAge\": 10,\n    \"maximumAge\": 12,\n    \"status\": \"SCHEDULED\",\n    \"isActive\": true,\n    \"notes\": \"Annual vaccination drive\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Drive",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-drives/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-drives", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"vaccine\": {\n        \"id\": 1\n    },\n    \"vaccineBatch\": \"BATCH002\",\n    \"driveDate\": \"2024-01-02\",\n    \"availableDoses\": 90,\n    \"applicableGrades\": \"5,6,7\",\n    \"minimumAge\": 10,\n    \"maximumAge\": 13,\n    \"status\": \"IN_PROGRESS\",\n    \"isActive\": true,\n    \"notes\": \"Updated drive details\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Drive",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-drives/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-drives", "1"]
+            }
+          }
+        },
+        {
+          "name": "Export Drives",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccination-drives/export?status=SCHEDULED&grade=5&startDate=2024-01-01&endDate=2024-12-31&format=pdf",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccination-drives", "export"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "SCHEDULED"
+                },
+                {
+                  "key": "grade",
+                  "value": "5"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "format",
+                  "value": "pdf"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vaccines",
+      "item": [
+        {
+          "name": "Get All Vaccines",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vaccines",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vaccines"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Student Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/students/count",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "students", "count"]
+            }
+          }
+        },
+        {
+          "name": "Get Vaccines Administered",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/vaccines/administered",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "vaccines", "administered"]
+            }
+          }
+        },
+        {
+          "name": "Get Vaccines Due Soon",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/vaccines/due-soon",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "vaccines", "due-soon"]
+            }
+          }
+        },
+        {
+          "name": "Get Vaccines Overdue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/vaccines/overdue",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "vaccines", "overdue"]
+            }
+          }
+        },
+        {
+          "name": "Get Vaccinations by Grade",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/vaccinations/by-grade",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "vaccinations", "by-grade"]
+            }
+          }
+        },
+        {
+          "name": "Get Vaccination Status Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/vaccinations/status-summary",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "vaccinations", "status-summary"]
+            }
+          }
+        },
+        {
+          "name": "Get Upcoming Drives",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/upcoming-drives",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "upcoming-drives"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grades",
+      "item": [
+        {
+          "name": "Get All Grades",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/grades",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grades"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "token",
+      "value": "your_jwt_token_here"
+    }
+  ]
+} 

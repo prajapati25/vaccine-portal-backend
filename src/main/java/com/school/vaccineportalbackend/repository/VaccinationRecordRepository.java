@@ -6,6 +6,7 @@ import com.school.vaccineportalbackend.model.VaccinationRecord;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface VaccinationRecordRepository extends JpaRepository<VaccinationRecord, Long> {
+public interface VaccinationRecordRepository extends JpaRepository<VaccinationRecord, Long>, JpaSpecificationExecutor<VaccinationRecord> {
     List<VaccinationRecord> findByStudent(Student student);
     List<VaccinationRecord> findByVaccinationDrive(VaccinationDrive drive);
     List<VaccinationRecord> findByStudentAndStatus(Student student, String status);
@@ -42,4 +43,10 @@ public interface VaccinationRecordRepository extends JpaRepository<VaccinationRe
     long countByNextDoseDateBeforeAndStatusNot(@Param("date") LocalDateTime date, @Param("status") String status);
     
     List<VaccinationRecord> findByStatus(String status);
+
+    @Query("SELECT vr FROM VaccinationRecord vr WHERE vr.vaccinationDrive.vaccine.id = :vaccineId")
+    Page<VaccinationRecord> findByVaccineId(@Param("vaccineId") Long vaccineId, Pageable pageable);
+    
+    @Query("SELECT CASE WHEN COUNT(v) > 0 THEN true ELSE false END FROM VaccinationRecord v WHERE v.vaccinationDrive.vaccine.id = :vaccineId")
+    boolean existsByVaccinationDriveVaccineId(@Param("vaccineId") Long vaccineId);
 }

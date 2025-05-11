@@ -6,20 +6,28 @@ import com.school.vaccineportalbackend.model.VaccinationRecord;
 import com.school.vaccineportalbackend.repository.StudentRepository;
 import com.school.vaccineportalbackend.repository.VaccinationRecordRepository;
 import com.school.vaccineportalbackend.dto.VaccinationRecordDTO;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 public class VaccinationRecordService {
+    private static final Logger logger = LogManager.getLogger(VaccinationRecordService.class);
+    
     @Autowired
     private VaccinationRecordRepository vaccinationRecordRepository;
     
@@ -29,11 +37,12 @@ public class VaccinationRecordService {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     private VaccinationRecordDTO convertToDTO(VaccinationRecord record) {
+        logger.debug("Converting vaccination record to DTO - ID: {}", record.getId());
         VaccinationRecordDTO dto = new VaccinationRecordDTO();
         dto.setId(record.getId());
         dto.setStudentId(record.getStudent().getStudentId());
         dto.setStudentName(record.getStudent().getName());
-        dto.setVaccinationDriveId(record.getVaccinationDrive().getId());
+        dto.setDriveId(record.getVaccinationDrive().getId());
         dto.setDoseNumber(record.getDoseNumber());
         dto.setVaccinationDate(record.getVaccinationDate().format(DATE_TIME_FORMATTER));
         dto.setBatchNumber(record.getBatchNumber());
@@ -59,8 +68,8 @@ public class VaccinationRecordService {
         record.setStudent(student);
         
         // Set vaccination drive
-        VaccinationDrive drive = vaccinationRecordRepository.findVaccinationDriveById(dto.getVaccinationDriveId())
-            .orElseThrow(() -> new IllegalArgumentException("Vaccination drive not found with ID: " + dto.getVaccinationDriveId()));
+        VaccinationDrive drive = vaccinationRecordRepository.findVaccinationDriveById(dto.getDriveId())
+            .orElseThrow(() -> new IllegalArgumentException("Vaccination drive not found with ID: " + dto.getDriveId()));
         record.setVaccinationDrive(drive);
         
         // Set dates
@@ -139,27 +148,75 @@ public class VaccinationRecordService {
 
     @Transactional
     public VaccinationRecordDTO updateRecord(Long id, VaccinationRecordDTO recordDTO) {
-        VaccinationRecord existingRecord = vaccinationRecordRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Vaccination record not found"));
+        logger.info("Updating vaccination record with ID: {}", id);
         
-        // Update only the fields that are provided in the DTO
+        VaccinationRecord existingRecord = vaccinationRecordRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.error("Vaccination record not found with ID: {}", id);
+                    return new RuntimeException("Vaccination record not found");
+                });
+        
+        // Validate student if provided
+        if (recordDTO.getStudentId() != null) {
+            Student student = studentRepository.findById(recordDTO.getStudentId())
+                .orElseThrow(() -> {
+                    logger.error("Student not found with ID: {}", recordDTO.getStudentId());
+                    return new RuntimeException("Student not found");
+                });
+            existingRecord.setStudent(student);
+        }
+        
+        // Validate drive if provided
+        if (recordDTO.getDriveId() != null) {
+            VaccinationDrive drive = vaccinationRecordRepository.findVaccinationDriveById(recordDTO.getDriveId())
+                .orElseThrow(() -> {
+                    logger.error("Vaccination drive not found with ID: {}", recordDTO.getDriveId());
+                    return new RuntimeException("Vaccination drive not found");
+                });
+            existingRecord.setVaccinationDrive(drive);
+        }
+        
+        // Update dose number if provided
         if (recordDTO.getDoseNumber() != null) {
+            // Validate dose number sequence
+            Optional<VaccinationRecord> lastDose = vaccinationRecordRepository
+                .findFirstByStudentAndVaccinationDriveOrderByDoseNumberDesc(
+                    existingRecord.getStudent(), existingRecord.getVaccinationDrive());
+            
+            if (lastDose.isPresent() && recordDTO.getDoseNumber() <= lastDose.get().getDoseNumber()) {
+                logger.error("Invalid dose number sequence for student: {} and drive: {}", 
+                    existingRecord.getStudent().getStudentId(), existingRecord.getVaccinationDrive().getId());
+                throw new RuntimeException("Invalid dose number sequence");
+            }
             existingRecord.setDoseNumber(recordDTO.getDoseNumber());
         }
+        
+        // Update vaccination date if provided
         if (recordDTO.getVaccinationDate() != null) {
             try {
-                existingRecord.setVaccinationDate(LocalDateTime.parse(recordDTO.getVaccinationDate(), DATE_TIME_FORMATTER));
+                LocalDateTime vaccinationDate = LocalDateTime.parse(recordDTO.getVaccinationDate(), DATE_TIME_FORMATTER);
+                if (vaccinationDate.isAfter(LocalDateTime.now())) {
+                    logger.error("Vaccination date cannot be in the future");
+                    throw new RuntimeException("Vaccination date cannot be in the future");
+                }
+                existingRecord.setVaccinationDate(vaccinationDate);
             } catch (DateTimeParseException e) {
-                throw new IllegalArgumentException("Invalid vaccination date format. Expected format: yyyy-MM-dd'T'HH:mm:ss");
+                logger.error("Invalid vaccination date format: {}", recordDTO.getVaccinationDate());
+                throw new RuntimeException("Invalid vaccination date format. Expected format: yyyy-MM-dd'T'HH:mm:ss");
             }
         }
+        
+        // Update next dose date if provided
         if (recordDTO.getNextDoseDate() != null) {
             try {
                 existingRecord.setNextDoseDate(LocalDateTime.parse(recordDTO.getNextDoseDate(), DATE_TIME_FORMATTER));
             } catch (DateTimeParseException e) {
-                throw new IllegalArgumentException("Invalid next dose date format. Expected format: yyyy-MM-dd'T'HH:mm:ss");
+                logger.error("Invalid next dose date format: {}", recordDTO.getNextDoseDate());
+                throw new RuntimeException("Invalid next dose date format. Expected format: yyyy-MM-dd'T'HH:mm:ss");
             }
         }
+        
+        // Update other fields if provided
         if (recordDTO.getBatchNumber() != null) {
             existingRecord.setBatchNumber(recordDTO.getBatchNumber());
         }
@@ -170,7 +227,14 @@ public class VaccinationRecordService {
             existingRecord.setVaccinationSite(recordDTO.getVaccinationSite());
         }
         if (recordDTO.getStatus() != null) {
-            existingRecord.setStatus(recordDTO.getStatus());
+            // Validate status transition
+            String currentStatus = existingRecord.getStatus();
+            String newStatus = recordDTO.getStatus();
+            if (!isValidStatusTransition(currentStatus, newStatus)) {
+                logger.error("Invalid status transition from {} to {}", currentStatus, newStatus);
+                throw new RuntimeException("Invalid status transition");
+            }
+            existingRecord.setStatus(newStatus);
         }
         if (recordDTO.getSideEffects() != null) {
             existingRecord.setSideEffects(recordDTO.getSideEffects());
@@ -180,7 +244,20 @@ public class VaccinationRecordService {
         }
         
         VaccinationRecord savedRecord = vaccinationRecordRepository.save(existingRecord);
+        logger.debug("Successfully updated vaccination record with ID: {}", savedRecord.getId());
         return convertToDTO(savedRecord);
+    }
+
+    private boolean isValidStatusTransition(String currentStatus, String newStatus) {
+        // Define valid status transitions
+        if (currentStatus.equals("SCHEDULED")) {
+            return newStatus.equals("COMPLETED") || newStatus.equals("CANCELLED");
+        } else if (currentStatus.equals("COMPLETED")) {
+            return newStatus.equals("CANCELLED"); // Can only cancel a completed record
+        } else if (currentStatus.equals("CANCELLED")) {
+            return false; // Cannot change status of cancelled record
+        }
+        return false;
     }
 
     @Transactional
@@ -209,5 +286,44 @@ public class VaccinationRecordService {
         if (lastDose.isPresent() && record.getDoseNumber() <= lastDose.get().getDoseNumber()) {
             throw new RuntimeException("Invalid dose number sequence");
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Page<VaccinationRecordDTO> generateVaccinationReport(
+            String vaccineName,
+            String status,
+            String grade,
+            LocalDate startDate,
+            LocalDate endDate,
+            Pageable pageable) {
+        
+        Specification<VaccinationRecord> spec = Specification.where(null);
+        
+        if (vaccineName != null && !vaccineName.isEmpty()) {
+            spec = spec.and((root, query, cb) -> 
+                cb.equal(root.get("vaccinationDrive").get("vaccine").get("name"), vaccineName));
+        }
+        
+        if (status != null && !status.isEmpty()) {
+            spec = spec.and((root, query, cb) -> 
+                cb.equal(root.get("status"), status));
+        }
+        
+        if (grade != null && !grade.isEmpty()) {
+            spec = spec.and((root, query, cb) -> 
+                cb.equal(root.get("student").get("grade"), grade));
+        }
+        
+        if (startDate != null) {
+            spec = spec.and((root, query, cb) -> 
+                cb.greaterThanOrEqualTo(root.get("vaccinationDate"), startDate.atStartOfDay()));
+        }
+        
+        if (endDate != null) {
+            spec = spec.and((root, query, cb) -> 
+                cb.lessThanOrEqualTo(root.get("vaccinationDate"), endDate.atTime(23, 59, 59)));
+        }
+        
+        return vaccinationRecordRepository.findAll(spec, pageable).map(this::convertToDTO);
     }
 }
